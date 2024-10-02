@@ -17,6 +17,12 @@ import XCTest
 import _SwiftSyntaxTestSupport
 
 class SyntaxClassifierPerformanceTests: XCTestCase {
+  override func setUp() async throws {
+    #if os(Android)
+    // the source file is not copied over to the Android emulator
+    throw XCTSkip("skipping SyntaxClassifierPerformanceTests on Android")
+    #endif
+  }
 
   var inputFile: URL {
     return URL(fileURLWithPath: #filePath)

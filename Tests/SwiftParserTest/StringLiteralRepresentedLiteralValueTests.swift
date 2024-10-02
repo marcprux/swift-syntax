@@ -291,7 +291,14 @@ class StringLiteralRepresentedLiteralValueTests: ParserTestCase {
     XCTAssertEqual(representedLiteralValue, expected.description, file: file, line: line)
   }
 
-  let literals = try! StringLiteralCollector()
+  override func setUp() async throws {
+    #if os(Android)
+    // the source file is not copied over to the Android emulator
+    throw XCTSkip("skipping StringLiteralRepresentedLiteralValueTests on Android")
+    #endif
+  }       
+
+  lazy var literals = try! StringLiteralCollector()
 
   /// Helper class to find string literals in this source file
   class StringLiteralCollector: SyntaxVisitor {
@@ -300,6 +307,10 @@ class StringLiteralRepresentedLiteralValueTests: ParserTestCase {
 
     init(file: String = #filePath) throws {
       let url = URL(fileURLWithPath: file)
+      if (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) != true {
+        // do not run the test if it has not been copied
+        throw XCTSkip("skipping StringLiteralCollector due to missing file")
+      }
       let fileData = try Data(contentsOf: url)
       let source = fileData.withUnsafeBytes {
         String(decoding: $0.bindMemory(to: UInt8.self), as: UTF8.self)
